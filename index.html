@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- Encoding -->
+	<meta charset="utf-8"/>
+
+	<!-- Webpage meta -->
+	<title>FromSoft Area Name Generator</title>
+	<meta name="description" content=
+		"Discover randomly generated location names based on FromSoftware games like Dark Souls, Bloodborne and Elden Ring.
+		Also includes features to create image macros and generate text overlays.">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href=graphics/favicon.ico type="image/x-icon" />
+
+	<!-- jQuery (TODO: get rid of this dependency) -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script>
+
+	<!-- Bootstrap (TODO: get rid of this dependency) -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+	<!-- Garamond font, care of Adobe. -->
+	<link rel="stylesheet" href="https://use.typekit.net/lke6kpb.css">
+	
+	<!-- Google Analytics to track traffic -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-HCGGJHJ3DR"></script>
+	<!-- Script to make it easier to opt-in and opt-out -->
+	<script src="https://www.npmcdn.com/gtag-opt-in"></script>
+	<!-- My script to tie it all together -->
+	<script type="text/javascript" src="cookies.js"></script>
+
+	<!-- My stylesheet and scripts -->
+	<!-- <link rel="stylesheet" href="normal.css"> -->
+	<link rel="stylesheet" href="soulsy-input.css">
+	<link rel="stylesheet" href="new-area.css">
+	<script type="text/javascript" src="areas.js"></script>
+	<script type="text/javascript" src="new-area.js"></script>
+	<script type="text/javascript" src="image-creator/js/tinyUtils.js"></script>
+	<script type="text/javascript" src="image-creator/js/imageHandler.js"></script>
+	<script type="text/javascript" src="image-creator/js/sliderGroup.js"></script>
+	<script type="text/javascript" src="image-creator/js/macroGenerator.js"></script>
+	<script type="text/javascript" src="image-creator/js/drawFunctions.js"></script>
+	<script type="text/javascript" src="image-creator/js/layerTypes.js"></script>
+
+	<!-- Specific page-setup script -->
+	<script type="text/javascript">
+
+		window.addEventListener('DOMContentLoaded', function() {
+			// Set up event to only instantiate the MacroGenerator once the little modal is opened.
+
+			function onclick() {
+				window.MACROGEN_DEFAULTS = {
+					macroType: 'areaName', game: 'ds1', preset: 'Area Name'
+				}
+				if ($('#name').text()) $('#image-caption').val($('#name').text())
+				macroGen = new MacroGenerator()
+				macroGen.redrawMacro()
+			}
+
+			byId('image-gen').addEventListener('click', onclick, {once: true})
+		})
+	
+	</script>
+
+	<!-- Twitter Card info -->
+	<meta name=twitter:card content=summary_large_image>
+	<meta name=twitter:site content=@rezuaq>
+	<meta name=twitter:creator content=@rezuaq>
+	<meta name=twitter:title content="FromSoft Area Name Generator">
+	<meta name=twitter:description content="Discover randomly generated areas from FromSoftware games, or make image macros.">
+	<meta name=twitter:image content=https://i.imgur.com/5cqsQZv.png>
+		
+</head>
+
+<body>
+
+<div id=background-layer class="background-layer faded"></div>
+<div id=world-layer class="background-layer faded"></div>
+
+<div id=main>
+	<div class='main content' style="padding-bottom: 25px">
+		
+		<div id=stars class=unselectable>&nbsp;</div>
+
+		<div id=name-underline-wrapper class=faded-out>
+			<div id=name></div>
+			<div class=underline></div>
+		</div>
+
+		<div id=generate-input-wrapper>
+			<div id=generate-button-wrapper>
+				<button id=generate-button class=soulsy onclick=generate()>Travel Somewhere Else</button>
+			</div>
+			<div id=checkboxes-wrapper>
+				<label><input target=Dark1 checked type=checkbox></input> Dark Souls</label>
+				<label><input target=Dark2 checked type=checkbox></input> Dark Souls II</label>
+				<label><input target=Dark3 checked type=checkbox></input> Dark Souls III</label>
+				<label class=elden><input target=Elden checked type=checkbox></input> Elden Ring</label>
+				<br>
+				<label class=special><input target=Demons type=checkbox></input> Demon's Souls</label>
+				<label class=special><input target=Blood  type=checkbox></input> Bloodborne</label>
+				<label class=special><input target=Sekiro type=checkbox></input> Sekiro</label>
+				<label class=custom> <input target=Custom type=checkbox></input> Custom</label>
+			</div>
+		</div>
+
+		<div style="position:absolute; right:15px; bottom:8px;">
+			<button id=tweetButton class=emoji-button onclick=tweetIntent() title="Share on Twitter" data-toggle=tooltip>🐦&#xFE0F;</button>
+			<button id=transpButton class=emoji-button onclick=toggleShade() title="Toggle Shade" data-toggle=tooltip>🕶️&#xFE0F;</button>
+			<button id=muteButton class=emoji-button onclick=toggleMute() title="Toggle Sound" data-toggle=tooltip>🔊&#xFE0F;</button>
+		</div>
+	</div>
+
+
+	<div id=lesser-content-wrapper>
+
+		<div id=background-select class="lesser content">
+			<h4>Background select</h4>
+			<button class="emoji-button minimise"></button>
+
+			<div class=body hidden>
+				<div id=background-list> <!-- script fills this up --> </div>
+				<br>
+				<label><input type=checkbox target=shuffle-bg checked> Occasionally change background when traveling</label>
+			</div>
+		</div>
+
+
+		<div id=image-gen class="lesser content">
+			<h4>Image macro creator</h4>
+			<button class="emoji-button minimise"></button>
+
+			<div class=body hidden>
+				<div class=help style=width:700px;max-width:80vw>
+					Select, link or paste an image to put a convincing area name pop-up on it. <br>
+					(Image composition happens in-app; No data is ever sent to a server, all images are 100% private.)
+				</div><br>
+
+				<div style="display:flex; overflow-x:auto; width:calc(100% + 40px); position: relative; left:-20px">
+					<canvas id=canvas class=small width=1920px height=1080px></canvas><br>
+				</div>
+				<div class=info style="text-align:center">Canvas resolution: <span id="canv-res-x">1920</span> × <span id="canv-res-y">1080</span>px</div>
+
+				<div style="margin: 1em -1em 2em -1em; display: flex; flex-wrap: wrap; justify-content: center;">
+					<div style="width:400px">
+
+						<div id=global-sliders class=sliders-container>
+							<div hidden>
+								<span class=input-title style=min-width:100px>Macro type:</span>
+								<select name=macro-type></select>
+							</div>
+							<div>
+								<span class=input-title style=min-width:100px>Game:</span>
+								<select name=macro-type-game></select>
+							</div>
+							<div hidden>
+								<span class=input-title style=min-width:100px>Preset:</span>
+								<div name=macro-type-preset-holder style=display:inline-block></div>
+							</div>
+
+							<div>
+								<span class=input-title>Name:</span>
+								<input type=text id=image-caption value="Area Name" size=32 style="float:right">
+								<input name=adjustCase type=checkbox hidden>
+							</div>
+							
+							<div hidden id="layers-container"></div>
+
+						</div>
+					
+						<div id=background-image class=sliders-container>
+							<div>
+								<span class=input-title>Image URL:</span>
+								<input type=text id=image-URL size=32 style="float:right">
+							</div>
+							<div>
+								<span class=input-title>Image Upload:</span>
+								<input type=file id=image-upload accept="image/*" style=display:inline;float:right>
+							</div>
+							<div hidden>
+								<span class=input-title>Limit image resolution:</span>
+								<input type=checkbox id=limit-resolution checked> <span class=help style="margin-left:1em">(Decreases strain on your system)</span>
+								<div id=resolution-warning hidden>Warning: Selected image is too large, auto re-rendering is disabled.</div>
+							</div>
+						</div>
+
+						<div id=macro-sliders style=width:400px;margin-top:1em>
+							<h3> Overlay options </h3>
+
+							<div name=position class=sliders-container hidden>
+								<div>
+									<span class=input-title>Horizontal offset:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=range name=xOffset min=-.60 max=.60 step=0.001 default=0>
+								</div>
+								<div>
+									<span class=input-title>Vertical offset:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=range name=yOffset min=-.60 max=.60 step=0.001 default=0>
+								</div>
+								<div>
+									<span class=input-title>Scale:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=range name=scale min=-3 max=4 step=.01 default=0 as=log2>
+								</div>
+							</div>
+
+							<div name=font class='sliders-container hidden' hidden>
+								<div class=smol>
+									<span class=input-title>Font family:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=text name=fontFamily>
+								</div>
+								<div class=smol>
+									<span class=input-title>Text color:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=color name=textColor>
+								</div>
+								<div class=smol>
+									<span class=input-title>Font size:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=range name=fontSize min=10 max=300 step=1>
+								</div>
+								<div class=smol>
+									<span class=input-title>Font weight:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=range name=fontWeight min=100 max=900 step=100>
+								</div>
+								<div class=smol>
+									<span class=input-title>Vertical scale:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=range name=vScale min=-2 max=2 step=.02 as=log1.5>
+								</div>
+								<div class=smol>
+									<span class=input-title>Letter spacing:</span>
+									<button class="lil-button reset-button"></button>
+									<input type=range name=charSpacing min=-10 max=40 step=.5>
+								</div>
+							</div>
+
+							<div name=outline class='sliders-container hidden' hidden>
+								<div class=smol>
+									<span class=input-title>Outline width:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=lineWidth type=range min=0 max=60>
+								</div>
+								<div class=smol>
+									<span class=input-title>Outline color:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=lineColor type=color>
+								</div>
+							</div>
+
+							<div name=area class=sliders-container hidden>
+								<div class=smol>
+									<span class=input-title>Line length:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=ulLength type=range min=0 max=.64 step=.01>
+								</div>
+								<div class=smol>
+									<span class=input-title>Line width:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=ulWidth type=range min=0 max=20 step=.5>
+								</div>
+								<div class=smol>
+									<span class=input-title>Line position:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=ulPos type=range min=0 max=100 step=1>
+								</div>
+								<div class=smol>
+									<span class=input-title>Contrast:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=contrast type=range min=0 max=3 step=0.1 default=1>
+								</div>
+							</div>
+
+							<div name=bbArea class=sliders-container hidden>
+								<h4> Decoration </h4>
+								<div>
+									<span class=input-title>Blot opacity:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=blotOpacity type=range min=0 max=1 step=.01>
+								</div>
+								<div class=hidden>
+									<!-- Hidden -->
+									<span class=input-title>Effect:</span>
+									<button class="lil-button reset-button"></button>
+									<select name=mode default="transparency">
+										<option value="transparency">Safe</option>
+										<option value="blend">Authentic</option>
+									</select>
+								</div>
+							</div>
+
+							<div name=sekiroFrame class=sliders-container hidden>
+								<h4> Text background </h4>
+								<div>
+									<span class=input-title>Opacity:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=opacity type=range min=0 max=1 step=.01 default=0.6>
+								</div>
+								<div class=smol>
+									<span class=input-title>Width:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=frameWidth type=range min=.1 max=2 step=.02 default=1>
+								</div>
+								<div class=smol>
+									<span class=input-title>Height:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=frameHeight type=range min=.1 max=4 step=.02 default=1>
+								</div>
+							</div>
+							
+							<div name=erFrame class=sliders-container hidden>
+								<div>
+									<span class=input-title>Frame opacity:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=opacity type=range min=0 max=1 step=.01>
+								</div>
+								<div class=smol>
+									<span class=input-title>Frame width:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=frameWidth type=range min=0 max=2 step=.01>
+								</div>
+								<div class=smol>
+									<span class=input-title>Frame height:</span>
+									<button class="lil-button reset-button"></button>
+									<input name=frameHeight type=range min=0 max=.5 step=.005>
+								</div>
+							</div>
+			
+						</div>
+
+					</div>
+				</div>
+
+				<button style=float:right;margin-left:.5em;font-size:18px class=soulsy-box onclick=macroGen.saveImage()>Save image</button>
+				<a style="float:left;font-size:16px" href="image-creator/" target="_blank">For more features: FromSoft Image Macro Creator</a>
+			</div>
+		</div>
+
+
+		<div id=custom-input class="lesser content hidden">
+			<h4>Custom area parts</h4> <button class="soulsy-box" style=float:right;font-size:large onclick=saveCustom()>Save</button>
+			<br>
+
+			<div class=help style=width:700px;max-width:80vw>
+				Use semicolons to separate pieces. Don't leave spaces before/after semicolons. Trailing semicolon optional.
+				Capitalisation matters. Does not auto-save.
+			</div><br>
+
+			<span class=input-title>Proper Locations:</span> <span class=example>e.g. "Anor Londo;Majula;Lothric"</span> <br>
+			<textarea name=properLocations cols=90 rows=1></textarea><br>
+
+			<span class=input-title>Places:</span> <span class=example>e.g. "World;Chasm;Forest"</span> <br>
+			<textarea name=primaryLocations cols=90 rows=2></textarea><br>
+			<span class=input-title>Sub-places:</span> <span class=example>e.g. "Chasm;Forest;Road"</span> <br>
+			<div class=help style=width:700px;max-width:90vw>
+				This should contain all the same parts as the previous box, except for the few ones that don't work for describing a sub-area of a larger area.<br>
+				e.g. "Lothric Town" works, so "Town" fits in here, "Lothric World" does not, so "World" is excluded.
+			</div>
+			<textarea name=secondaryLocations cols=90 rows=2></textarea><br><br>
+			
+			<span class=input-title>Personal names:</span> <span class=example>e.g. "Quelaag;Aldia;Ariandel"</span> <br>
+			<textarea name=properNames cols=90 rows=1></textarea><br><br>
+			
+			<span class=input-title>Possessives:</span> <span class=example>e.g. "No-Man's;Duke's;The King's"</span> <br>
+			<textarea name=possessives cols=90 rows=1></textarea><br>
+			<span class=input-title>Prefixes:</span> <span class=example>e.g. "Blight;Byrgen"</span> <span class=help>(These are glued directly onto a place name e.g. Blightcity)</span> <br>
+			<textarea name=prefixes cols=90 rows=1></textarea><br>
+			<span class=input-title>Positional descriptors:</span> <span class=example>e.g. "Northern;Upper;Inner"</span> <br>
+			<textarea name=positionals cols=90 rows=1></textarea><br>
+			<span class=input-title>Adjectives:</span> <span class=example>e.g. "New;Great;Frozen"</span> <span class=help>(Don't include anything from the previous three boxes.)</span> <br> 
+			<textarea name=adjectives cols=90 rows=2></textarea><br><br>
+			
+			<span class=input-title>Appendices:</span> <span class=example>e.g. "of the Giants;Betwixt;of Flame"</span> <br>
+			<textarea name=appendices cols=90 rows=2></textarea>
+		</div>
+
+
+		<div class="lesser content streamer-feature">
+			<h4>Streamer features</h4>
+			<button class="emoji-button minimise"></button>
+
+			<div class=body hidden>
+
+				<span class="help">Displays any name you put in.</span><br>
+				<input type="text" id="custom-text" size="40"></input>
+				<button id="custom-button" class="soulsy-box" onclick=customGenerate()>Display</button>
+
+				<br><br>
+
+				<button class="soulsy-box" onClick="$('#fade-out-check').prop('checked', false); $('#name-underline-wrapper').removeClass('faded-out');">
+					Fade in
+				</button>
+
+				<button class="soulsy-box" onClick="$('#name-underline-wrapper').addClass('faded-out');">
+					Fade out
+				</button>
+
+				<label><input id="fade-out-check" type="checkbox"></input> Fade out automatically</label><br>
+				<label>Seconds before automatically fading out: &nbsp;<input id="fade-out-time" type="text" size="2" value="3.5"></input></label>
+				
+				<br>
+				
+				<button id=chromaButton style="margin-top:-15px; float:right" class="soulsy-box" onClick=toggleChroma()>chroma</button>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<div class='cookie-banner hidden'>
+	<div>This page uses Google Analytics to track traffic and page views. Cookies can always be disabled at the bottom of the page. </div>
+	<button class="soulsy-box" onclick=denyTracking()>Deny cookies</button>
+	<button class="soulsy-box" onclick=consentToTracking()>Accept cookies</button>	
+</div>
+
+<div id=footer>
+	<div id=bottom-fade></div>
+
+	<div id=credits>
+		<div class="credit left" style=line-height:1em>
+			<label style=font-weight:regular>Latest inclusion: Elden Ring (2022)</label><br>
+			<label>Disable Animations and Surprises: <input type=checkbox target=disable-anims onclick="localStorage.setItem('disable-anims', this.checked)"></label><br>
+			<label>Enable Google Analytics cookies: <input type=checkbox target=enable-ga></label>
+		</div>
+
+		<div class="credit right">
+			<a href="http://twitter.com/rezuaq" target=_blank>Created by Rezuaq</a>
+			<span class=dash>-</span>
+			<a href="https://github.com/Sibert-Aerts/sibert-aerts.github.io/tree/master/new-area" target=_blank>On Github</a>
+			<span class=dash>-</span>
+			<a href="image-creator/" target=_blank>Image Macro Creator</a>
+			<span class=dash>-</span>
+			<a href="http://imgur.com/a/xrxes" target=_blank>Background images</a>
+		</div>
+		
+		<div class="cookie-banner phantom hidden" style="position:initial">
+			<div>This page uses Google Analytics to track traffic and page views. Cookies can always be disabled at the bottom of the page. </div>
+			<button class="soulsy-box">Deny cookies</button>
+			<button class="soulsy-box">Accept cookies</button>	
+		</div>
+	</div>
+</div>
+
+</body>
+
+</html>
